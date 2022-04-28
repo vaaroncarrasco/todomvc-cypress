@@ -92,7 +92,7 @@ approach is to first write a falling test around the bug before fixing it. Once 
 fixed, your test will pass, which verifies that your new code has eliminated the bug.
 
 
-### Manual vs Automated Testing
+## Manual vs Automated Testing
 
 **Manual Testing**
 Manual testing involves someone, typically QA, physically interacting with an app. Manual testing
@@ -136,7 +136,7 @@ Test automation is quickly becoming the "norm" for most software engineering tea
 and usefulness will only increase over time.
 
 
-### Who should be responsible for testing?
+## Who should be responsible for testing?
 
 Short answer, everyone's.
 
