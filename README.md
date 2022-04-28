@@ -2,13 +2,14 @@
 
 This is where I'll have some Cypress notes and also the React TodoMVC App
 I have used to practice Cypress testing.All the following content is based
-on the courses from this [website].(https://learn.cypress.io/#courses)
+on the courses from this [website](https://learn.cypress.io/#courses).
 
 
-## Testing Foundations
+# Testing Foundations
 
 
-### - Testing is a mindset
+## Testing is a mindset
+
 Testing methodologies, tools, frameworks, etc. are irrelevant if you first
 do not understand that testing is first and foremost, a mindset.
 
@@ -37,7 +38,7 @@ If you're working with Agile, the testcases can be captured in the user stories
 as acceptance criteria for the story to be done.
 
 
-### - Knowing what to test
+## Knowing what to test
 Okay, let's write some tests... but, what to test? Where should I start from?
 How do I test my app? The answer for these 3 questions always is: "It depends".
 
