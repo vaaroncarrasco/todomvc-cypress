@@ -6,6 +6,7 @@ on the courses from this [website](https://learn.cypress.io/#courses).
 
 
 # Testing Foundations
+<hr>
 
 
 ## Testing is a mindset
@@ -210,3 +211,235 @@ application are working together correctly.
 End-to-end (E2E) tests will often replace your integration tests, as they are essentially testing the
 same thing. However, E2E tests have an ever more significant advantage and value over integration tests,
 as they are testing real user interactions within your application.
+
+
+# Cypress Fundamentals
+<hr>
+
+## How to write a test
+
+We should use a pattern that makes them easy to write, reason about and expand. One pattern is the
+AAA(Arrange-Act-Assert) pattern.
+
+**Arrange**
+
+In step one, the Arrange step, you have to perform some setup for your test. For example, in the
+case of a Cypress end-to-end test, you need to tell Cypress to open the browser and navigate to
+the correct URL.
+
+```
+cy.visit("http://localhost:8888")
+```
+
+**Act**
+
+In step two, the Act step, you perform some action. For example, in the case of a todo app,
+you want to test that you can add a single todo.
+
+```
+cy.get(".new-todo").type("Buy Milk{enter}")
+```
+
+In this example, we are getting the element with the class of .new-todo and then typing "Buy Milk"
+and simulating pressing the Enter key to add the todo.
+
+**Assert**
+
+Finally, in step three, you Assert. In this step, you assert that the thing you acted upon in step
+two did what you expected.
+
+```
+cy.get(".todo-list li").should("have.length", 1)
+```
+
+In this example, we are getting the element that contains the todo items that we added to the app
+and asserting that there is only a single todo.
+
+With these three steps in mind, here is what a simple Cypress end-to-end test looks like for a
+TodoMVC application.
+
+## A simple end-to-end test
+
+The following example is from the React TodoMVC app, which we cover in the "Testing your first
+application" section.
+
+```
+// app.spec.js
+
+describe("React TodoMVC", () => {
+  it("adds a single todo", () => {
+    cy.visit("http://localhost:8888") // Arrange
+    cy.get(".new-todo").type("Buy Milk{enter}") // Act
+    cy.get(".todo-list li").should("have.length", 1) // Assert
+  })
+})
+```
+Before breaking this test file down, it is important to note that Cypress is built upon Mocha.
+In this example, all of the functions other than those that begin with cy come from Mocha.
+
+Each test file will typically begin with a describe() function or "block." This function provides a
+way to organize your tests and makes things easier to read. Test files can have multiple describe()
+within them as it provides the context for the tests written inside them.
+
+Next, we have an it block. This is our actual test and where our test code goes. We first provide a
+test name "adds a single todo" and then pass in a callback function. Within the body of our test,
+we are doing three things.
+
+**1. Arrange**
+Telling Cypress to visit the URL http://localhost:8888
+
+**2. Act**
+Getting the element with the class of .new-todo and typing in the string "Buy Milk" and pressing
+the Enter key.
+
+**3. Assert**
+We are asserting that only a single todo has been added to the app.
+
+
+# Cypress runs in the browser
+
+Cypress's architecture, unlike most other testing tools, runs inside of the browser. This means
+that your tests are being executed in the same environment as your application. This allows Cypress
+to detect all events that are fired by your browser and give it real native access to everything
+within your tests.
+
+Most other testing tools (like Selenium) run outside of the browser and execute remote commands
+across the network to control the browser. Cypress is the exact opposite!
+
+Since Cypress is running in the browser, it also operates at the network layer by reading and
+altering web traffic on the fly. Cypress can therefore modify everything coming in and out of the
+browser, which will allow you to test your application in ways no other testing tool can. This also
+gives it native access to things like the window object, document, DOM elements, service workers, etc.
+
+This distinction can aid in many ways, including setting up or modifying frontend state libraries
+such as Redux or MobX directly from your Cypress tests.
+
+Anything the browser can access, Cypress can as well.
+
+
+# Command Chaining
+
+It's important to understand the mechanism Cypress uses to chain commands together. It manages
+a Promise chain on your behalf, with each command yielding a 'subject' to the following command
+until the chain ends or there is an error. The developer should not need to use Promises directly,
+but understanding how they work is helpful.
+
+For example, a chain of Cypress commands looks like this:
+
+```
+cy.get(".todo-list li").find("label").should("contain", "Buy Milk")
+```
+
+In this example, cy.get() will yield the "<li>" subject to .find() which will then search for
+the "<label>" element. Finally, we make an assertion that the "<label>" contains the text "Buy Milk."
+
+However, it is important to note that not all Cypress commands yield a subject that can be chained.
+For instance, cy.clearCookies() yields null, which cannot be chained.
+
+Cypress commands like cy.get() and cy.contains() yield DOM elements that can be chained, like in
+the example above.
+
+When you want to act upon a subject directly from a Cypress command, you need to yield the subject
+to .then(). We cover .then() and cy.wrap() in the (Understanding the Asynchronous nature of Cypress
+lesson)[#Understanding-the-Asynchronous-nature-of-Cypress-lesson]
+
+You can learn more about command chaining from our docs here.
+
+
+
+# Understanding the Asynchronous nature of Cypress
+
+This is arguably one of the most crucial Cypress concepts that you need to understand. How Cypress
+handles things asynchronously is often misunderstood by developers and can lead to issues and confusion
+later on, especially when trying to debug your tests.
+
+## Return vs. Yield
+
+Cypress commands **DO NOT** return their subjects. This means you cannot do things like this:
+
+```
+// THIS WILL NOT WORK
+const button = cy.get("button")
+
+button.click()
+```
+
+This is one of the primary reasons why we do not recommend using variables within your tests.
+
+Instead, Cypress commands yield their subjects.
+
+Cypress commands are asynchronous and get queued for execution at a later time. While commands are
+executed, their subjects are yielded from one command to the next. This is because a lot of helpful
+Cypress code runs between each command to ensure everything is in order.
+
+## .then() // .then() is a Cy Command, not a Promise
+
+So if a command does not return a subject but instead yields it, how can you interact with the subject
+directly? You can interact with a subject directly by using .then().
+j
+.then() behaves similarly to Promises in JavaScript. However, .then() is a Cypress command, not a Promise.
+This means you cannot use things like async/await within your Cypress tests.
+
+Whatever is returned from the callback function becomes the new subject and will flow into the following
+command (except for undefined).
+
+```
+cy.get("button").then(($btn) => {
+  const cls = $btn.attr("class")
+
+  // ...
+})
+```
+
+When undefined is returned by the callback function, the subject will not be modified and will instead
+carry over to the next command.
+
+Just like Promises, you can return any compatible "thenable" (anything that has a .then() interface),
+and Cypress will wait for that to resolve before continuing forward through the chain of commands.
+
+If you're familiar with native Promises, the Cypress .then() works the same way.
+
+## .wrap()
+
+In our example just above, $btn is a jQuery object. This means that if we would like Cypress to perform
+some action upon it, we first need to use cy.wrap() for Cypress to interact with it.
+
+The example continued...
+
+```
+cy.get("button").then(($btn) => {
+  const cls = $btn.attr("class")
+
+  cy.wrap($btn).click().should("not.have.class", cls)
+})
+```
+
+In this example, we are first getting the "<button>" HTML element. Our subject, which in this case
+is the "<button>" HTML element is yielded from cy.get() to .then(). We can then access the subject
+as the variable$btn , but first need to .wrap() it to perform whatever operations or assertions we
+would like on it.
+
+Before our assertion, which in this case is .should('not.have.class', cls) we first need Cypress to
+.click() the button. For Cypress to click on our $btn, we must first wrap it with cy.wrap() to provide
+the proper context for Cypress to perform the click.
+
+To illustrate, we cannot do something like this, because $btn is a jQuery object.
+
+```
+$btn.click().should("not.have.class", cls) // Does not work
+```
+
+We must use cy.wrap() first, because it provides Cypress the context necessary for interacting with
+the $btn.
+
+```
+cy.wrap($btn).click().should("not.have.class", cls)
+```
+
+To learn more about the asynchronous nature of Cypress, please check the following sections of our docs.
+
+Commands Are Asynchronous
+
+The Cypress Command Queue
+
+Return Values
